@@ -6,7 +6,7 @@
     script_name: "{{ script_name }}"
     smtp_username: "{{ smtp_username }}"
     smtp_password: "{{ smtp_password }}"
-  
+
   tasks:
     - name: Ensure script has execute permission
       ansible.builtin.file:
@@ -69,7 +69,6 @@
 
           Failed Hosts (KO):
           {{ lookup('file', playbook_dir + '/failed_hosts.txt') }}
-
         attach:
           - "{{ playbook_dir }}/final_results.csv"
 
