@@ -1,0 +1,99 @@
+---
+- name: Run User-Specified Script on All Hosts and Collect Results
+  hosts: all
+  gather_facts: no
+  vars:
+    script_name: "{{ script_name }}"
+    smtp_username: "{{ smtp_username }}"
+    smtp_password: "{{ smtp_password }}"
+
+  tasks:
+    - name: Ensure script has execute permission
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/files/{{ script_name }}"
+        mode: '0755'
+
+    - name: Run the user-specified script
+      ansible.builtin.shell: "{{ playbook_dir }}/files/{{ script_name }}"
+      register: script_result
+      ignore_errors: yes
+
+    - name: Collect results
+      ansible.builtin.lineinfile:
+        path: /tmp/results.csv
+        line: "{{ inventory_hostname }},{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }},{{ script_result.rc }},{{ script_result.stdout | replace(',', ' ') | replace('\n', ' ') }}"
+        create: yes
+        state: present
+
+    - name: Copy results to local machine
+      ansible.builtin.fetch:
+        src: /tmp/results.csv
+        dest: "{{ playbook_dir }}/results/"
+        flat: yes
+
+    - name: Remove results from remote servers
+      ansible.builtin.file:
+        path: /tmp/results.csv
+        state: absent
+
+  post_tasks:
+    - name: Aggregate results
+      ansible.builtin.command: "cat {{ playbook_dir }}/results/* > {{ playbook_dir }}/final_results.csv"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Create lists of hosts based on exit codes
+      ansible.builtin.local_action:
+        module: shell
+        cmd: |
+          awk -F, '$3 == "0" {print $1} > {{ playbook_dir }}/success_hosts.txt; \
+          awk -F, '$3 != "0" {print $1} > {{ playbook_dir }}/failed_hosts.txt'
+      run_once: true
+
+    - name: Send email with results
+      ansible.builtin.mail:
+        host: smtp.yourserver.com
+        port: 587
+        username: "{{ smtp_username }}"
+        password: "{{ smtp_password }}"
+        to: "recipient@example.com"
+        subject: "{{ script_name }} finished"
+        body: |
+          The script "{{ script_name }}" has been executed on all hosts.
+          
+          Successful Hosts:
+          {{ lookup('file', 'success_hosts.txt') }}
+
+          Failed Hosts:
+          {{ lookup('file', 'failed_hosts.txt') }}
+        attach:
+          - "{{ playbook_dir }}/final_results.csv"
+
+    # - name: Send Rocket.Chat alert
+    #   ansible.builtin.uri:
+    #     url: "https://chat.server.com/hooks/{{ playbook_dir }}"
+    #     method: POST
+    #     headers:
+    #       Content-Type: "application/json"
+    #     body: >
+    #       {
+    #         "text": "The script {{ script_name }} has been executed on all hosts. \
+    #         Success: {{ lookup('file', 'success_hosts.txt') }} \
+    #         Failures: {{ lookup('file', 'failed_hosts.txt') }}"
+    #       }
+    #     body_format: json
+    #     status_code: 200
+    - name: Send Rocket.Chat alert
+      ansible.builtin.uri:
+        url: "{{ rocket_chat_webhook }}"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: >
+          {
+            "text": "The script {{ script_name }} has been executed on all hosts. \
+            Success: {{ lookup('file', 'success_hosts.txt') }} \
+            Failures: {{ lookup('file', 'failed_hosts.txt') }}"
+          }
+        body_format: json
+        status_code: 200
