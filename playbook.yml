@@ -1,12 +1,12 @@
 ---
 - name: Run User-Specified Script on All Hosts and Collect Results
   hosts: all
-  gather_facts: no
+  gather_facts: yes
   vars:
     script_name: "{{ script_name }}"
     smtp_username: "{{ smtp_username }}"
     smtp_password: "{{ smtp_password }}"
-
+  
   tasks:
     - name: Ensure script has execute permission
       ansible.builtin.file:
@@ -43,11 +43,11 @@
       run_once: true
 
     - name: Create lists of hosts based on exit codes
-      ansible.builtin.local_action:
-        module: shell
-        cmd: |
-          awk -F, '$3 == "0" {print $1} > {{ playbook_dir }}/success_hosts.txt; \
-          awk -F, '$3 != "0" {print $1} > {{ playbook_dir }}/failed_hosts.txt'
+      ansible.builtin.shell: |
+        awk -F, '$3 == "0" {print $1} > {{ playbook_dir }}/success_hosts.txt; \
+        awk -F, '$3 != "0" {print $1} > {{ playbook_dir }}/failed_hosts.txt; \
+        echo $(wc -l < {{ playbook_dir }}/success_hosts.txt) > {{ playbook_dir }}/success_count.txt; \
+        echo $(wc -l < {{ playbook_dir }}/failed_hosts.txt) > {{ playbook_dir }}/failed_count.txt'
       run_once: true
 
     - name: Send email with results
@@ -60,29 +60,19 @@
         subject: "{{ script_name }} finished"
         body: |
           The script "{{ script_name }}" has been executed on all hosts.
-          
-          Successful Hosts:
-          {{ lookup('file', 'success_hosts.txt') }}
 
-          Failed Hosts:
-          {{ lookup('file', 'failed_hosts.txt') }}
+          Number of Successful Hosts: {{ lookup('file', playbook_dir + '/success_count.txt') }}
+          Number of Failed Hosts: {{ lookup('file', playbook_dir + '/failed_count.txt') }}
+
+          Successful Hosts (OK):
+          {{ lookup('file', playbook_dir + '/success_hosts.txt') }}
+
+          Failed Hosts (KO):
+          {{ lookup('file', playbook_dir + '/failed_hosts.txt') }}
+
         attach:
           - "{{ playbook_dir }}/final_results.csv"
 
-    # - name: Send Rocket.Chat alert
-    #   ansible.builtin.uri:
-    #     url: "https://chat.server.com/hooks/{{ playbook_dir }}"
-    #     method: POST
-    #     headers:
-    #       Content-Type: "application/json"
-    #     body: >
-    #       {
-    #         "text": "The script {{ script_name }} has been executed on all hosts. \
-    #         Success: {{ lookup('file', 'success_hosts.txt') }} \
-    #         Failures: {{ lookup('file', 'failed_hosts.txt') }}"
-    #       }
-    #     body_format: json
-    #     status_code: 200
     - name: Send Rocket.Chat alert
       ansible.builtin.uri:
         url: "{{ rocket_chat_webhook }}"
@@ -91,9 +81,11 @@
           Content-Type: "application/json"
         body: >
           {
-            "text": "The script {{ script_name }} has been executed on all hosts. \
-            Success: {{ lookup('file', 'success_hosts.txt') }} \
-            Failures: {{ lookup('file', 'failed_hosts.txt') }}"
+            "text": "The script {{ script_name }} has been executed on all hosts. \n \
+            Number of Successful Hosts: {{ lookup('file', playbook_dir + '/success_count.txt') }} \n \
+            Number of Failed Hosts: {{ lookup('file', playbook_dir + '/failed_count.txt') }} \n \
+            Successful Hosts (OK): {{ lookup('file', playbook_dir + '/success_hosts.txt') }} \n \
+            Failed Hosts (KO): {{ lookup('file', playbook_dir + '/failed_hosts.txt') }}"
           }
         body_format: json
         status_code: 200
