@@ -6,8 +6,18 @@
     script_name: "{{ script_name }}"
     smtp_username: "{{ smtp_username }}"
     smtp_password: "{{ smtp_password }}"
+    result_dir: "/tmp/results"
+    result_file: "{{ result_dir }}/{{ script_name }}_{{ ansible_date_time.date }}.csv"
 
   tasks:
+    - name: Ensure result directory exists on the control node
+      ansible.builtin.file:
+        path: "{{ result_dir }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
     - name: Ensure script has execute permission
       ansible.builtin.file:
         path: "{{ playbook_dir }}/files/{{ script_name }}"
@@ -28,7 +38,7 @@
     - name: Copy results to local machine
       ansible.builtin.fetch:
         src: /tmp/results.csv
-        dest: "{{ playbook_dir }}/results/"
+        dest: "{{ result_file }}"
         flat: yes
 
     - name: Remove results from remote servers
@@ -37,18 +47,14 @@
         state: absent
 
   post_tasks:
-    - name: Aggregate results
-      ansible.builtin.command: "cat {{ playbook_dir }}/results/* > {{ playbook_dir }}/final_results.csv"
-      delegate_to: localhost
-      run_once: true
-
     - name: Create lists of hosts based on exit codes
       ansible.builtin.shell: |
-        awk -F, '$3 == "0" {print $1} > {{ playbook_dir }}/success_hosts.txt; \
-        awk -F, '$3 != "0" {print $1} > {{ playbook_dir }}/failed_hosts.txt; \
-        echo $(wc -l < {{ playbook_dir }}/success_hosts.txt) > {{ playbook_dir }}/success_count.txt; \
-        echo $(wc -l < {{ playbook_dir }}/failed_hosts.txt) > {{ playbook_dir }}/failed_count.txt'
+        awk -F, '$3 == "0" {print $1} > {{ result_dir }}/success_hosts.txt; \
+        awk -F, '$3 != "0" {print $1} > {{ result_dir }}/failed_hosts.txt; \
+        echo $(wc -l < {{ result_dir }}/success_hosts.txt) > {{ result_dir }}/success_count.txt; \
+        echo $(wc -l < {{ result_dir }}/failed_hosts.txt) > {{ result_dir }}/failed_count.txt'
       run_once: true
+      delegate_to: localhost
 
     - name: Send email with results
       ansible.builtin.mail:
@@ -61,16 +67,16 @@
         body: |
           The script "{{ script_name }}" has been executed on all hosts.
 
-          Number of Successful Hosts: {{ lookup('file', playbook_dir + '/success_count.txt') }}
-          Number of Failed Hosts: {{ lookup('file', playbook_dir + '/failed_count.txt') }}
+          Number of Successful Hosts: {{ lookup('file', result_dir + '/success_count.txt') }}
+          Number of Failed Hosts: {{ lookup('file', result_dir + '/failed_count.txt') }}
 
           Successful Hosts (OK):
-          {{ lookup('file', playbook_dir + '/success_hosts.txt') }}
+          {{ lookup('file', result_dir + '/success_hosts.txt') }}
 
           Failed Hosts (KO):
-          {{ lookup('file', playbook_dir + '/failed_hosts.txt') }}
+          {{ lookup('file', result_dir + '/failed_hosts.txt') }}
         attach:
-          - "{{ playbook_dir }}/final_results.csv"
+          - "{{ result_file }}"
 
     - name: Send Rocket.Chat alert
       ansible.builtin.uri:
@@ -81,10 +87,10 @@
         body: >
           {
             "text": "The script {{ script_name }} has been executed on all hosts. \n \
-            Number of Successful Hosts: {{ lookup('file', playbook_dir + '/success_count.txt') }} \n \
-            Number of Failed Hosts: {{ lookup('file', playbook_dir + '/failed_count.txt') }} \n \
-            Successful Hosts (OK): {{ lookup('file', playbook_dir + '/success_hosts.txt') }} \n \
-            Failed Hosts (KO): {{ lookup('file', playbook_dir + '/failed_hosts.txt') }}"
+            Number of Successful Hosts: {{ lookup('file', result_dir + '/success_count.txt') }} \n \
+            Number of Failed Hosts: {{ lookup('file', result_dir + '/failed_count.txt') }} \n \
+            Successful Hosts (OK): {{ lookup('file', result_dir + '/success_hosts.txt') }} \n \
+            Failed Hosts (KO): {{ lookup('file', result_dir + '/failed_hosts.txt') }}"
           }
         body_format: json
         status_code: 200
