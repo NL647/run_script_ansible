@@ -30,29 +30,29 @@
 
     - name: Collect results
       ansible.builtin.lineinfile:
-        path: /tmp/results.csv
+        path: "/tmp/results.csv"
         line: "{{ inventory_hostname }},{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }},{{ script_result.rc }},{{ script_result.stdout | replace(',', ' ') | replace('\n', ' ') }}"
         create: yes
         state: present
 
     - name: Copy results to local machine
       ansible.builtin.fetch:
-        src: /tmp/results.csv
-        dest: "{{ result_file }}"
+        src: "/tmp/results.csv"
+        dest: "{{ result_dir }}/{{ inventory_hostname }}_results.csv"
         flat: yes
 
     - name: Remove results from remote servers
       ansible.builtin.file:
-        path: /tmp/results.csv
+        path: "/tmp/results.csv"
         state: absent
 
   post_tasks:
     - name: Create lists of hosts based on exit codes
       ansible.builtin.shell: |
-        awk -F, '$3 == "0" {print $1} > {{ result_dir }}/success_hosts.txt; \
-        awk -F, '$3 != "0" {print $1} > {{ result_dir }}/failed_hosts.txt; \
-        echo $(wc -l < {{ result_dir }}/success_hosts.txt) > {{ result_dir }}/success_count.txt; \
-        echo $(wc -l < {{ result_dir }}/failed_hosts.txt) > {{ result_dir }}/failed_count.txt'
+        awk -F, '\$3 == "0" {print \$1}' {{ result_dir }}/*.csv > {{ result_dir }}/success_hosts.txt
+        awk -F, '\$3 != "0" {print \$1}' {{ result_dir }}/*.csv > {{ result_dir }}/failed_hosts.txt
+        echo $(wc -l < {{ result_dir }}/success_hosts.txt) > {{ result_dir }}/success_count.txt
+        echo $(wc -l < {{ result_dir }}/failed_hosts.txt) > {{ result_dir }}/failed_count.txt
       run_once: true
       delegate_to: localhost
 
