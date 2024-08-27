@@ -57,7 +57,7 @@
       delegate_to: localhost
 
     - name: Send email with results
-      ansible.builtin.mail:
+      community.general.mail:
         host: smtp.yourserver.com
         port: 587
         username: "{{ smtp_username }}"
