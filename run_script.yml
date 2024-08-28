@@ -4,8 +4,8 @@
   gather_facts: yes
   vars:
     script_name: "{{ script_name }}"
-    smtp_username: "{{ smtp_username }}"
-    smtp_password: "{{ smtp_password }}"
+    db_user: "{{ db_user }}"
+    db_password: "{{ db_password }}"
     result_dir: "/tmp/results"
     result_file: "{{ result_dir }}/{{ script_name }}_{{ ansible_date_time.date }}.csv"
 
@@ -46,51 +46,7 @@
         path: "/tmp/results.csv"
         state: absent
 
-  post_tasks:
-    - name: Create lists of hosts based on exit codes
-      ansible.builtin.shell: |
-        awk -F, '\$3 == "0" {print \$1}' {{ result_dir }}/*.csv > {{ result_dir }}/success_hosts.txt
-        awk -F, '\$3 != "0" {print \$1}' {{ result_dir }}/*.csv > {{ result_dir }}/failed_hosts.txt
-        echo $(wc -l < {{ result_dir }}/success_hosts.txt) > {{ result_dir }}/success_count.txt
-        echo $(wc -l < {{ result_dir }}/failed_hosts.txt) > {{ result_dir }}/failed_count.txt
-      run_once: true
-      delegate_to: localhost
-
-    - name: Send email with results
-      community.general.mail:
-        host: smtp.yourserver.com
-        port: 587
-        username: "{{ smtp_username }}"
-        password: "{{ smtp_password }}"
-        to: "recipient@example.com"
-        subject: "{{ script_name }} finished"
-        body: |
-          The script "{{ script_name }}" has been executed on all hosts.
-
-          Number of Successful Hosts: {{ lookup('file', result_dir + '/success_count.txt') }}
-          Number of Failed Hosts: {{ lookup('file', result_dir + '/failed_count.txt') }}
-
-          Successful Hosts (OK):
-          {{ lookup('file', result_dir + '/success_hosts.txt') }}
-
-          Failed Hosts (KO):
-          {{ lookup('file', result_dir + '/failed_hosts.txt') }}
-        attach:
-          - "{{ result_file }}"
-
-    - name: Send Rocket.Chat alert
-      ansible.builtin.uri:
-        url: "{{ rocket_chat_webhook }}"
-        method: POST
-        headers:
-          Content-Type: "application/json"
-        body: >
-          {
-            "text": "The script {{ script_name }} has been executed on all hosts. \n \
-            Number of Successful Hosts: {{ lookup('file', result_dir + '/success_count.txt') }} \n \
-            Number of Failed Hosts: {{ lookup('file', result_dir + '/failed_count.txt') }} \n \
-            Successful Hosts (OK): {{ lookup('file', result_dir + '/success_hosts.txt') }} \n \
-            Failed Hosts (KO): {{ lookup('file', result_dir + '/failed_hosts.txt') }}"
+  
           }
         body_format: json
         status_code: 200
