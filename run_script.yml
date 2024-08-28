@@ -17,7 +17,7 @@
         mode: '0755'  # Ensure scripts are executable
 
     - name: Execute the selected script and capture output
-      ansible.builtin.command: /tmp/files/{{ script_name }}
+      ansible.builtin.command: /tmp/files/{{ script_name }} {{ DBNAME }} {{ db_user }} {{ db_password }}
       register: script_result
       ignore_errors: yes  # Continue even if the script fails
 
