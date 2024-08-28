@@ -2,9 +2,20 @@
 
 
 # Assign variables from script arguments
-DBNAME=$DBNAME
-DBUSER=$db_user
-DBPASS=$db_password
+#DBNAME=$DBNAME
+#DBUSER=$db_user
+#DBPASS=$db_password
+
+# Check if the correct number of arguments is provided
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <DB_NAME> <DB_USER> <DB_PASS>"
+    exit 1
+fi
+
+# Assign variables from script arguments
+DBNAME=$1
+DBUSER=$2
+DBPASS=$3
 
 # Update package list and upgrade system
 echo -e "Updating "
