@@ -23,7 +23,7 @@ echo -e "Installing Mariadb"
 sudo apt install mariadb-server -y
 
 # Run the MariaDB secure installation script
-sudo mysql_secure_installation
+#sudo mysql_secure_installation
 
 # Install PHP and required extensions
 echo -e "Installing php latest"
