@@ -13,7 +13,7 @@
     - name: Copy the script to the server
       ansible.builtin.copy:
         src: files/
-        dest: /tmp/scripts/
+        dest: /tmp/files/
         mode: '0755'  # Ensure scripts are executable
 
     - name: Execute the selected script and capture output
