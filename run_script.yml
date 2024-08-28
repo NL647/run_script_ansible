@@ -6,6 +6,7 @@
     script_name: "{{ script_name }}"
     db_user: "{{ db_user }}"
     db_password: "{{ db_password }}"
+    DBNAME: "{{ DBNAME }}"
     result_dir: "/tmp/results"
     result_file: "{{ result_dir }}/{{ script_name }}_{{ ansible_date_time.date }}.csv"
 
