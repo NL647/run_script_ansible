@@ -7,8 +7,7 @@
     db_user: "{{ db_user }}"
     db_password: "{{ db_password }}"
     DBNAME: "{{ DBNAME }}"
-    result_dir: "/tmp/results"
-    result_file: "{{ result_dir }}/{{ script_name }}_{{ ansible_date_time.date }}.csv"
+
 
   tasks:
     - name: Ensure result directory exists on the control node
@@ -29,25 +28,3 @@
       register: script_result
       ignore_errors: yes
 
-    - name: Collect results
-      ansible.builtin.lineinfile:
-        path: "/tmp/results.csv"
-        line: "{{ inventory_hostname }},{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }},{{ script_result.rc }},{{ script_result.stdout | replace(',', ' ') | replace('\n', ' ') }}"
-        create: yes
-        state: present
-
-    - name: Copy results to local machine
-      ansible.builtin.fetch:
-        src: "/tmp/results.csv"
-        dest: "{{ result_dir }}/{{ inventory_hostname }}_results.csv"
-        flat: yes
-
-    - name: Remove results from remote servers
-      ansible.builtin.file:
-        path: "/tmp/results.csv"
-        state: absent
-
-  
-          }
-        body_format: json
-        status_code: 200
