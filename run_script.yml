@@ -17,7 +17,7 @@
         mode: '0755'  # Ensure scripts are executable
 
     - name: Execute the selected script and capture output
-      ansible.builtin.command: /tmp/files/{{ script_name }} {{ DBNAME }} {{ db_user }} {{ db_password }}
+      ansible.builtin.shell: /tmp/files/{{ script_name }} {{ DBNAME }} {{ db_user }} {{ db_password }}
       register: script_result
       ignore_errors: yes  # Continue even if the script fails
 
@@ -26,7 +26,7 @@
         msg:
           - "Host: {{ inventory_hostname }}"
           - "IP: {{ ansible_ssh_host }}"
-          - "stdout: {{ script_result.stdout }}"
+          - "stdout: {{ script_result.stdout_lines }}"
           - "exit code: {{ script_result.rc }}"
 
     - name: Clean up the scripts folder from the server
