@@ -35,7 +35,7 @@ sudo systemctl restart apache2
 
 # Open HTTP port on UFW
 echo -e "Opening port 80 in UFW"
-sudo ufw allow 'Apache Full'
+sudo ufw allow http
 sudo ufw reload
 
 # Download and install WordPress
