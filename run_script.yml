@@ -10,13 +10,6 @@
 
 
   tasks:
-    - name: Ensure result directory exists on the control node
-      ansible.builtin.file:
-        path: "{{ result_dir }}"
-        state: directory
-        mode: '0755'
-      delegate_to: localhost
-      run_once: true
 
     - name: Ensure script has execute permission
       ansible.builtin.file:
