@@ -7,31 +7,39 @@ DBUSER=$db_user
 DBPASS=$db_password
 
 # Update package list and upgrade system
+echo -e "Updating "
 sudo apt update -y && sudo apt upgrade -y
 
 # Install Apache
+echo -e "installing Apache"
 sudo apt install apache2 -y
 
 # Enable Apache to start on boot
+echo -e "Restarting Apache2"
 sudo systemctl enable apache2
 
 # Install MariaDB (MySQL drop-in replacement)
+echo -e "Installing Mariadb"
 sudo apt install mariadb-server -y
 
 # Run the MariaDB secure installation script
 sudo mysql_secure_installation
 
 # Install PHP and required extensions
+echo -e "Installing php latest"
 sudo apt install php libapache2-mod-php php-mysql php-cli php-curl php-xml php-gd php-mbstring -y
 
 # Restart Apache to apply changes
+echo -e "Restarting apache2"
 sudo systemctl restart apache2
 
 # Open HTTP port on UFW
+echo -e "Opening port 80 in UFW"
 sudo ufw allow 'Apache Full'
 sudo ufw reload
 
 # Download and install WordPress
+echo -e "Installing Wordpress"
 cd /tmp
 wget https://wordpress.org/latest.tar.gz
 tar xzvf latest.tar.gz
@@ -44,6 +52,7 @@ sudo chown -R www-data:www-data /var/www/html/
 sudo chmod -R 755 /var/www/html/
 
 # Create a MySQL/MariaDB database for WordPress
+echoo -e "Creating db user"
 sudo mysql -e "CREATE DATABASE ${DBNAME};"
 sudo mysql -e "CREATE USER '${DBUSER}'@'localhost' IDENTIFIED BY '${DBPASS}';"
 sudo mysql -e "GRANT ALL PRIVILEGES ON ${DBNAME}.* TO '${DBUSER}'@'localhost';"
