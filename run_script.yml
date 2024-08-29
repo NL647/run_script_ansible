@@ -7,7 +7,7 @@
     db_user: "{{ db_user }}"
     db_password: "{{ db_password }}"
     DBNAME: "{{ DBNAME }}"
-    DB_ROOT_PASS: "{{ DBROOTPASS }}"
+    DB_ROOT_PASS: "{{ DB_ROOT_PASS }}"
 
 
   tasks:
@@ -18,7 +18,7 @@
         mode: '0755'  # Ensure scripts are executable
 
     - name: Execute the selected script and capture output
-      ansible.builtin.shell: /tmp/files/{{ script_name }} {{ DBNAME }} {{ db_user }} {{ db_password }} {{DBROOTPASS}}
+      ansible.builtin.shell: /tmp/files/{{ script_name }} {{ DBNAME }} {{ db_user }} {{ db_password }} {{DB_ROOT_PASS}}
       register: script_output
       ignore_errors: yes  # Continue even if the script fails
 
