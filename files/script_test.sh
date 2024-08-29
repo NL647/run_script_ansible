@@ -7,4 +7,7 @@
 
 ls -la
 echo -e "TEST"
-lsb_relase -a
+lsb_relase -a || >&2
+echo -e "Next command \n" 
+
+ll /tmp/ || echo -e "command failed to run " >&2
