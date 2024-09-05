@@ -11,11 +11,11 @@
 
 
   tasks:
-    - name: Copy the script to the server
+    - name: Upload the selected bash script to the host
       ansible.builtin.copy:
-        src: files/
-        dest: /tmp/
-        mode: '0755'  #Ensure scripts are executable
+        src: "./files/{{ script_name }}"
+        dest: "/tmp/{{ script_name }}"
+        mode: '0755'
 
 
     - name: Execute the selected script and capture output
