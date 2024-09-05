@@ -14,13 +14,13 @@
     - name: Upload the selected bash script to the host
       ansible.builtin.copy:
         src: "./files/{{ script_name }}"
-        dest: "/tmp/{{ script_name }}"
+        dest: "/tmp/"
         mode: '0755'
 
 
     - name: Execute the selected bash script to collect system information
       ansible.builtin.shell:
-        cmd: "/tmp/{{ script_name }}"
+        shell: "/tmp/{{ script_name }}"
       register: script_output
 
     - name: host info
