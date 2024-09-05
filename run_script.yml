@@ -13,7 +13,7 @@
   tasks:
     - name: Upload the selected bash script to the host
       ansible.builtin.copy:
-        src: "/files/{{ script_name }}"
+        src: "./files/{{ script_name }}"
         dest: "/tmp/{{ script_name }}"
         mode: '0755'
 
