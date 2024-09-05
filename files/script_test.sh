@@ -8,8 +8,7 @@ lsb_relase -a || >&2
 
 sudo apt update
 sudo apt-get install unattended-upgrades -y
-sudo echo "unattended-upgrades       unattended-upgrades/enable_auto_updates boolean true"\
-| sudo debconf-set-selections && sudo dpkg-reconfigure -f noninteractive unattended-upgrades || echo -e "Error installing package...."
+sudo echo "unattended-upgrades       unattended-upgrades/enable_auto_updates boolean true" | sudo debconf-set-selections && sudo dpkg-reconfigure -f noninteractive unattended-upgrades || echo -e "Error installing package...."
 
 echo -e "================================="
 echo -e "DONE..."
