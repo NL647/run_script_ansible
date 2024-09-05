@@ -13,9 +13,10 @@
   tasks:
     - name: Copy the script to the server
       ansible.builtin.copy:
-        src: ./files/{{ script_name }}
+        src: files/
         dest: /tmp/
-        mode: '0755'  # Ensure scripts are executable
+        mode: '0755'  #Ensure scripts are executable
+
 
     - name: Execute the selected script and capture output
       ansible.builtin.shell: /tmp/{{ script_name }} #{{ DBNAME }} {{ db_user }} {{ db_password }} {{DB_ROOT_PASS}}
