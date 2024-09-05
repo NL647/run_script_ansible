@@ -13,12 +13,12 @@
   tasks:
     - name: Copy the script to the server
       ansible.builtin.copy:
-        src: files/
-        dest: /tmp/files/
+        src: files/{{ script_name }}
+        dest: /tmp/
         mode: '0755'  # Ensure scripts are executable
 
     - name: Execute the selected script and capture output
-      ansible.builtin.shell: /tmp/files/{{ script_name }} #{{ DBNAME }} {{ db_user }} {{ db_password }} {{DB_ROOT_PASS}}
+      ansible.builtin.shell: /tmp/{{ script_name }} #{{ DBNAME }} {{ db_user }} {{ db_password }} {{DB_ROOT_PASS}}
       register: script_output
       ignore_errors: yes  # Continue even if the script fails
 
@@ -40,5 +40,5 @@
 
     - name: Clean up the scripts folder from the server
       ansible.builtin.file:
-        path: /tmp/files/
+        path: /tmp/{{ script_name }}
         state: absent          
