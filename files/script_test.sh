@@ -3,6 +3,7 @@
 
 #debug
 #set -x
+
 echo -e "================================="
 echo -e "Installing unattended-upgrades..."
 echo -e "================================="
