@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#debug
-#set -x
 
 echo -e "================================="
 echo -e "Installing unattended-upgrades..."
