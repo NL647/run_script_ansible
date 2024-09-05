@@ -18,10 +18,10 @@
         mode: '0755'
 
 
-    - name: Execute the selected script and capture output
-      ansible.builtin.shell: /tmp/{{ script_name }} #{{ DBNAME }} {{ db_user }} {{ db_password }} {{DB_ROOT_PASS}}
+    - name: Execute the selected bash script to collect system information
+      ansible.builtin.shell:
+        cmd: "/tmp/{{ script_name }}"
       register: script_output
-      ignore_errors: yes  # Continue even if the script fails
 
     - name: host info
       ansible.builtin.debug:
