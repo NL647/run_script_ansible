@@ -20,7 +20,7 @@
 
     - name: Execute the selected bash script to collect system information
       ansible.builtin.shell:
-        shell: "/tmp/{{ script_name }}"
+        cmd: "/tmp/{{ script_name }}"
       register: script_output
 
     - name: host info
