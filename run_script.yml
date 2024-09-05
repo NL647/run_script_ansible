@@ -39,7 +39,7 @@
         msg: "{{ script_output.stderr_lines }}"
       when: script_output.stderr_lines is defined and script_output.stderr_lines | length > 0
 
-    - name: Clean up the scripts folder from the server
-      ansible.builtin.file:
-        path: /tmp/{{ script_name }}
-        state: absent          
+    #- name: Clean up the scripts folder from the server
+      #ansible.builtin.file:
+        #path: /tmp/{{ script_name }}
+        #state: absent          
